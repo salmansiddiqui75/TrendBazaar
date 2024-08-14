@@ -28,6 +28,11 @@ public class HomeController
     {
         return "product";
     }
+    @GetMapping("/view_product")
+    public String viewProductDetails()
+    {
+        return "view_product_details";
+    }
 
 
 }
