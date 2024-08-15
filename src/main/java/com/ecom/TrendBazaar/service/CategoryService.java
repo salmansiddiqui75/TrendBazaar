@@ -11,4 +11,7 @@ public interface CategoryService
     public boolean exitCategory(String name);
 
     public List<Category> getAllCategory();
+    public boolean deleteCategoty(int id);
+
+    Category getByIdCategory(int id);
 }

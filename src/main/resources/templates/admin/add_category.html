@@ -61,8 +61,8 @@
                                 <tr>
                                     <th scope="col">S.No</th>
                                     <th scope="col">Category</th>
-                                    <th scope="col">Image</th>
                                     <th scope="col">Status</th>
+                                    <th scope="col">Image</th>
                                     <th scope="col">Action</th>
                                 </tr>
                                 </thead>
@@ -71,8 +71,11 @@
                                     <th scope="row">[[${c.count}]]</th>
                                     <td>[[${cat.name}]]</td>
                                     <td>[[${cat.isActive}]]</td>
-                                    <td>[[${cat.image}]]</td>
-                                    <td>@mdo</td>
+                                    <td><img th:src="@{'/img/img/category_img/'+${cat.image}}" width="50%" height="50px"></td>
+                                    <td>
+                                        <a th:href="@{'/admin/loadEditCategory/'+${cat.id}}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square fa-1x "></i>Edit</a>
+                                        <a th:href="@{'/admin/deleteCategory/'+${cat.id}}" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash  fa-1x"></i>Delete</a>
+                                    </td>
                                 </tr>
 
                                 </tbody>
