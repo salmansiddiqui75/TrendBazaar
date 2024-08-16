@@ -7,6 +7,7 @@ import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -138,13 +139,73 @@ public class AdminController
             System.out.println(path);
             Files.copy(file.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
             httpSession.setAttribute("successMsg","Product save successfully");
-
-            System.out.println(path);
         }
         else {
             httpSession.setAttribute("errorMsg","Something went wrong");
         }
         return "redirect:/admin/getAddProduct";
 
+    }
+
+    @GetMapping("/viewProduct")
+    public String viewProduct(@ModelAttribute Product product, Model model)
+    {
+        List<Product> allProduct = productService.getAllProduct();
+        model.addAttribute("allProduct",allProduct);
+        return "admin/view_product";
+    }
+
+    @GetMapping("/deleteProduct/{id}")
+    public String deleteProduct(@PathVariable int id,HttpSession session)
+    {
+        Boolean deletedProduct=productService.deleteProduct(id);
+        if(deletedProduct)
+        {
+            session.setAttribute("successMsg","Product deleted successfully");
+        }
+        else{
+            session.setAttribute("errorMsg","Something went wrong");
+        }
+        return "redirect:/admin/viewProduct";
+    }
+
+    @GetMapping("/loadEditProduct/{id}")
+    public String loadEditProduct(@PathVariable int id,Model model)
+    {
+        model.addAttribute("product",productService.getProductById(id));
+        model.addAttribute("category",categoryService.getByIdCategory(id));
+        return "admin/edit_product";
+    }
+    @PostMapping("/updateProduct")
+    public String updateProduct(@ModelAttribute Product product, Model model , @RequestParam("file")MultipartFile file, HttpSession session) throws IOException {
+        Product oldProduct = productService.getProductById(product.getId());
+        String imageName = file.isEmpty() ? oldProduct.getImage() : file.getOriginalFilename();
+
+        if(!ObjectUtils.isEmpty(oldProduct))
+        {
+            oldProduct.setTitle(product.getTitle());
+            oldProduct.setCategory(product.getCategory());
+            oldProduct.setDescription(product.getDescription());
+            oldProduct.setPrice(product.getPrice());
+            oldProduct.setStock(product.getStock());
+        }
+
+        Product savedProduct = productService.saveProduct(product);
+
+        if(!ObjectUtils.isEmpty(savedProduct))
+        {
+            if(!file.isEmpty())
+            {
+                File saveFile = new ClassPathResource("static/img/img").getFile();
+                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
+                System.out.println(path);
+                Files.copy(file.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
+                session.setAttribute("successMsg","Product updated successfully");
+            }
+            else {
+                session.setAttribute("errorMsg","Something went wrong");
+            }
+        }
+        return "/admin/loadEditProduct/"+product.getId();
     }
 }
