@@ -5,9 +5,7 @@ import com.ecom.TrendBazaar.model.Product;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import jakarta.servlet.http.HttpSession;
-import jakarta.websocket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.Banner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -100,13 +98,13 @@ public class AdminController
     @PostMapping("/updateCategory")
     public String updateCategory(@ModelAttribute Category category, @RequestParam("file")MultipartFile file,HttpSession session) throws IOException {
         Category oldCategory = categoryService.getByIdCategory(category.getId());
-        String imageName= file.isEmpty() ?oldCategory.getImage() : file.getOriginalFilename()  ;
+        String imageName= file.isEmpty() ? oldCategory.getImage() : file.getOriginalFilename()  ;
 
         if(!ObjectUtils.isEmpty(oldCategory))
         {
             oldCategory.setName(category.getName());
             oldCategory.setImage(imageName);
-            oldCategory.setActive(category.isActive());
+            oldCategory.setIsActive(category.getIsActive());
         }
         Category updateCategory = categoryService.saveCategory(oldCategory);
         if(!ObjectUtils.isEmpty(updateCategory))
@@ -131,6 +129,8 @@ public class AdminController
     public String saveProduct(@ModelAttribute Product product,HttpSession httpSession,@RequestParam("file")MultipartFile file) throws IOException {
         String imageName = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
         product.setImage(imageName);
+        product.setDiscount(0);
+        product.setDiscountPrice(product.getPrice());
         Product saveProduct = productService.saveProduct(product);
         if(!ObjectUtils.isEmpty(saveProduct))
         {
@@ -172,40 +172,75 @@ public class AdminController
     @GetMapping("/loadEditProduct/{id}")
     public String loadEditProduct(@PathVariable int id,Model model)
     {
-        model.addAttribute("product",productService.getProductById(id));
-        model.addAttribute("category",categoryService.getByIdCategory(id));
+        Product productById = productService.getProductById(id);
+        Category byIdCategory = categoryService.getByIdCategory(id);
+
+        model.addAttribute("product",productById);
+        model.addAttribute("category",byIdCategory);
         return "admin/edit_product";
     }
     @PostMapping("/updateProduct")
-    public String updateProduct(@ModelAttribute Product product, Model model , @RequestParam("file")MultipartFile file, HttpSession session) throws IOException {
+    public String updateProduct(@ModelAttribute Product product, Model model, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
+        // Retrieve the existing product
         Product oldProduct = productService.getProductById(product.getId());
-        String imageName = file.isEmpty() ? oldProduct.getImage() : file.getOriginalFilename();
 
-        if(!ObjectUtils.isEmpty(oldProduct))
-        {
-            oldProduct.setTitle(product.getTitle());
-            oldProduct.setCategory(product.getCategory());
-            oldProduct.setDescription(product.getDescription());
-            oldProduct.setPrice(product.getPrice());
-            oldProduct.setStock(product.getStock());
+        // Check if oldProduct is null
+        if (oldProduct == null) {
+            session.setAttribute("errorMsg", "Product not found with ID: " + product.getId());
+            return "redirect:/admin/loadEditProduct/" + product.getId();  // Redirect to edit page or an appropriate error page
         }
 
-        Product savedProduct = productService.saveProduct(product);
-
-        if(!ObjectUtils.isEmpty(savedProduct))
+        // Determine the image name
+        String imageName = file.isEmpty() ? oldProduct.getImage() : file.getOriginalFilename();
+        if(product.getDiscount()<0 || product.getDiscount()>100)
         {
-            if(!file.isEmpty())
+            session.setAttribute("errorMsg","Invalid discount !! It should be between 0 to 100 %");
+        }
+        else{
+
+            if(!ObjectUtils.isEmpty(product))
             {
-                File saveFile = new ClassPathResource("static/img/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
-                System.out.println(path);
-                Files.copy(file.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
-                session.setAttribute("successMsg","Product updated successfully");
+                oldProduct.setTitle(product.getTitle());
+                oldProduct.setCategory(product.getCategory());
+                oldProduct.setDescription(product.getDescription());
+                oldProduct.setPrice(product.getPrice());
+                oldProduct.setStock(product.getStock());
+                oldProduct.setImage(imageName);
+                oldProduct.setDiscount(product.getDiscount());
+                oldProduct.setIsActive(product.getIsActive());
+
+                double discount = product.getPrice() * (product.getDiscount() / 100.0);
+                double discountPrice = product.getPrice() - discount;
+                oldProduct.setDiscountPrice(discountPrice);
+            }
+
+
+            // Save the updated product
+            Product savedProduct = productService.saveProduct(oldProduct);
+
+            // If the product is saved successfully
+            if(!ObjectUtils.isEmpty(savedProduct))
+            {
+                if(!file.isEmpty())
+                {
+                    File saveFile = new ClassPathResource("static/img/img").getFile();
+                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
+                    System.out.println(path);
+                    Files.copy(file.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                session.setAttribute("successMsg","Product update successfully");
             }
             else {
                 session.setAttribute("errorMsg","Something went wrong");
             }
+
         }
-        return "/admin/loadEditProduct/"+product.getId();
+
+        // Update old product details
+
+        // Redirect to the product edit page or another appropriate page
+        return "redirect:/admin/loadEditProduct/" + product.getId();
     }
+
 }

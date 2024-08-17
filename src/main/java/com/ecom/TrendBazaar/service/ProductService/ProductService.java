@@ -12,4 +12,6 @@ public interface ProductService
     Boolean deleteProduct(int id);
 
     Product getProductById(int id);
+
+    List<Product> getAllActiveProduct(String category);
 }

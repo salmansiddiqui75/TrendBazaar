@@ -6,28 +6,37 @@
 </head>
 <body>
     <section>
-        <div class="container card-sh " style="margin-top:75px; margin-bottom:110px">
-                <div class="col-md-12 paint-card p-5">
+        <div class="container card-sh " style="margin-top:70px; margin-bottom:110px">
+                <div class="col-md-12 p-5">
                     <div class="row">
+
                     <div class="col-md-6 text-end">
-                        <img src="img\img\latest_product_img\book.jpg" width="40%" height="250px">
+                        <img th:src="@{'/img/img/product_img/'+${product.image}}" width="50%"  height="250px" >
                     </div>
                     <div class="col-md-6">
-                        <p class="fs-3">Laptop</p>
+                        <p class="fs-3">[[${product.title}]]</p>
                         <p>
                             <span class="fw-bold">Description :</span>
-                            <br> Rich Dad Poor Dad
+                            <br> [[${product.description}]]
                         </p>
                         <p>
                             <span class="fw-bold">Product Details : </span><br>
-                            Status : <span class="badge bg-success">Available :</span>
-                            <span class="badge bg-warning">Out of stock</span><br>Category :Book <br>Policy : 7 Days
+
+                            Status :
+                            <th:block th:if="${product.stock>0}">
+                                <span class="badge bg-success">Available</span>
+                            </th:block>
+                            <th:block th:unless="${product.stock>0}">
+                                <span class="badge bg-warning">Out of stock</span>
+                            </th:block>
+
+                            <br>Category : [[${product.category}]] <br>Policy : 7 Days
                             replacement & Return
                         </p>
                         <p class="fs-5 fw-bold">
-                            Price :&nbsp; &nbsp; &nbsp; &nbsp; <i class="fas fa-rupee-sign"></i> 500
-                            <span class="fs-6 text-decoration-line-through text-secondary">450</span>
-                            <span class="fs-6 text-success">15%</span>
+                            Price :&nbsp; &nbsp; &nbsp; &nbsp; <i class="fas fa-rupee-sign"></i> [[${product.discountPrice}]]
+                            <span class="fs-6 text-decoration-line-through text-secondary">[[${product.price}]]</span>
+                            <span class="fs-6 text-success">[[${product.discount}]]% Off</span>
                         </p>
 
                         <div class="row">
@@ -44,7 +53,13 @@
                                 <p>Free Shipping</p>
                             </div>
                         </div>
-                        <a href="#" class="btn btn-danger col-md-12 ">Add to Cart</a>
+                        <th:block th:if="${product.stock>0}">
+                            <a href="#" class="btn btn-danger col-md-12 ">Add to Cart</a>
+                        </th:block>
+                        <th:block th:unless="${product.stock>0}">
+                            <a href="#" class="btn text-white btn-warning col-md-12 ">Out Of Stock</a>
+                        </th:block>
+
                     </div>
                 </div>
             </div>

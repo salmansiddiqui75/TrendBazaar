@@ -8,19 +8,26 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
 @Getter
+@Setter
 @Entity
-public class Category
+public class User
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
+    private String mobileNumber;
+    private String email;
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
+    private String password;
     private String image;
-    private Boolean isActive;
+    public String role;
+
 }

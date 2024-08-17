@@ -37,17 +37,20 @@ public class ProductServiceImpl implements ProductService
 
     @Override
     public Product getProductById(int id) {
-       Product product= productRepository.findById(id).orElse(null);
-       return product;
+        return productRepository.findById(id).orElse(null);
     }
 
-
-//    public void getProductById(int id) {
-//        Optional<Product> byId=productRepository.findById(id);
-//
-////        if(!ObjectUtils.isEmpty(byId))
-////        {
-////            return byId.orElseThrow();
-////        }
-////    }
+    @Override
+    public List<Product> getAllActiveProduct(String category)
+    {
+        List<Product> product=null;
+        if(ObjectUtils.isEmpty(category))
+        {
+            product=productRepository.findByIsActiveTrue();
+        }
+        else{
+                product=productRepository.findByCategory(category);
+        }
+        return product;
+    }
 }
