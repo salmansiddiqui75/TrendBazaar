@@ -4,10 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,5 +29,10 @@ public class User
     private String image;
     private String role;
     private String confirmPassword;
+    private Boolean isEnable;
+    private Boolean accountNonLocked;
+    private int failedAttempts;
+    private Date lockTime;
+    private String reset_token;
 
 }

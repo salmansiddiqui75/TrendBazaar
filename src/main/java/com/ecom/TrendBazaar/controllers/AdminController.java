@@ -48,8 +48,9 @@ public class AdminController
             String email = principal.getName();
             User userByEmail = userService.findByEmail(email);
             model.addAttribute("loginUser",userByEmail);
-
         }
+        List<Category> allActiveCategory = categoryService.getAllActiveCategory();
+        model.addAttribute("category",allActiveCategory);
     }
 
     @GetMapping("/getAddProduct")
@@ -258,6 +259,30 @@ public class AdminController
 
         // Redirect to the product edit page or another appropriate page
         return "redirect:/admin/loadEditProduct/" + product.getId();
+    }
+
+    @GetMapping("/users")
+    public String getAllUser(Model model)
+    {
+        List<User> users = userService.getAllUser("ROLE_USER");
+        model.addAttribute("user",users);
+        return "/admin/all_user";
+    }
+
+    @GetMapping("/updateStatus")
+    public  String updateUserAccountStatus(@RequestParam Boolean status, @RequestParam int id,HttpSession session)
+    {
+        Boolean b = userService.updateUserAccountStatus(id, status);
+
+        if (b)
+        {
+            session.setAttribute("successMsg","Account status updated");
+        }
+        else {
+            session.setAttribute("errorMsg","Something went wrong");
+        }
+
+        return "redirect:/admin/users";
     }
 
 }

@@ -19,6 +19,10 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class SecurityConfig {
 
     @Autowired
+    @Lazy
+    private AuthFailureHandlerImpl authFailureHandler;
+
+    @Autowired
     private AuthenticationSuccessHandler authenticationSuccessHandler;
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -48,6 +52,7 @@ public class SecurityConfig {
             .requestMatchers("/**").permitAll())
             .formLogin(form->form.loginPage("/signin")
                         .loginProcessingUrl("/login")
+                    .failureHandler(authFailureHandler)
 //						.defaultSuccessUrl("/")
                         .successHandler(authenticationSuccessHandler))
                 .logout(logout->logout.permitAll());

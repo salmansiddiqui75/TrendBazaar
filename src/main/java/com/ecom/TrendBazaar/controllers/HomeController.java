@@ -6,6 +6,7 @@ import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.CommonUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -23,6 +24,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 public class HomeController
@@ -54,8 +56,9 @@ public class HomeController
             String email = principal.getName();
             User userByEmail = userService.findByEmail(email);
             model.addAttribute("loginUser",userByEmail);
-
         }
+        List<Category> allActiveCategory = categoryService.getAllActiveCategory();
+        model.addAttribute("category",allActiveCategory);
     }
     @GetMapping("/register")
     public String getRegister()
@@ -103,6 +106,38 @@ public class HomeController
             session.setAttribute("errorMsg","Something went wrong");
         }
         return "redirect:/register";
+    }
+
+    @GetMapping("/forgetPassword")
+    public String getForgetPassword() {
+        return "forget_password.html";
+    }
+
+    @PostMapping("/forget_password")
+    public String processForgetPassword(@RequestParam String email,HttpSession session)
+    {
+        User user = userService.findByEmail(email);
+        if(ObjectUtils.isEmpty(user))
+        {
+            session.setAttribute("errorMsg","Invalid email");
+        }
+        else{
+            String resetToken = UUID.randomUUID().toString();
+            userService.updateUserResetToken(email,resetToken);
+            Boolean mailSend = CommonUtil.sendMail();
+            if(mailSend)
+            {
+                session.setAttribute("successMsg","Password Reset Link Sent!! Pls check you given mail");
+            }else {
+                session.setAttribute("errorMsg","Something went wrong");
+            }
+        }
+
+        return "redirect:/forgetPassword";
+    }
+    @GetMapping("/reset_password")
+    public String getResetPassword() {
+        return "reset_password.html";
     }
 
 
