@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -40,9 +41,21 @@ public class HomeController
     }
 
     @GetMapping("/signin")
-    public String getLogin()
-    {
+    public String login() {
         return "login";
+    }
+
+
+    @ModelAttribute
+    public void getLoginUserDetails(Principal principal,Model model)
+    {
+        if(principal!=null)
+        {
+            String email = principal.getName();
+            User userByEmail = userService.findByEmail(email);
+            model.addAttribute("loginUser",userByEmail);
+
+        }
     }
     @GetMapping("/register")
     public String getRegister()
@@ -53,7 +66,6 @@ public class HomeController
     @GetMapping("/product")
     public String getProduct(Model model, @RequestParam(value = "category",defaultValue = "") String category)
     {
-        System.out.println("cat=" +" ="+category);
         List<Category> allActiveCategory = categoryService.getAllActiveCategory();
         List<Product> allActiveProduct = productService.getAllActiveProduct(category);
         model.addAttribute("product",allActiveProduct);

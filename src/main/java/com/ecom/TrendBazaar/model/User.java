@@ -28,6 +28,7 @@ public class User
     private String pincode;
     private String password;
     private String image;
-    public String role;
+    private String role;
+    private String confirmPassword;
 
 }

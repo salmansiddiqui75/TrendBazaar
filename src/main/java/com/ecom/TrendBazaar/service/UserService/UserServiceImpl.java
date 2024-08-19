@@ -7,21 +7,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserServiceImpl implements UserService
-{
+public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository repository;
+
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    public PasswordEncoder passwordEncoder;
 
     @Override
-    public User saveUser(User user)
-    {
+    public User saveUser(User user) {
+        user.setRole("ROLE_USER");
         String encoded = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encoded);
-        user.setRole("USER_ROLE");
-        return repository.save(user);
+        user.setPassword(encoded.trim());
+        User saved = repository.save(user);
+        return saved;
     }
 
 
+    @Override
+    public User findByEmail(String email) {
+        return repository.findByEmail(email);
+    }
 }

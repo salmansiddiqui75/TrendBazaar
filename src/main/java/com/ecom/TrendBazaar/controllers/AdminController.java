@@ -2,8 +2,10 @@ package com.ecom.TrendBazaar.controllers;
 
 import com.ecom.TrendBazaar.model.Category;
 import com.ecom.TrendBazaar.model.Product;
+import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
+import com.ecom.TrendBazaar.service.UserService.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -19,12 +21,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.Principal;
 import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController
 {
+    @Autowired
+    private UserService userService;
     @Autowired
     private CategoryService categoryService;
     @Autowired
@@ -33,6 +38,18 @@ public class AdminController
     public String getIndex()
     {
         return "admin/index";
+    }
+
+    @ModelAttribute
+    public void getLoginUserDetails(Principal principal, Model model)
+    {
+        if(principal!=null)
+        {
+            String email = principal.getName();
+            User userByEmail = userService.findByEmail(email);
+            model.addAttribute("loginUser",userByEmail);
+
+        }
     }
 
     @GetMapping("/getAddProduct")
