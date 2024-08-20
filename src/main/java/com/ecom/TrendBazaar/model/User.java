@@ -33,6 +33,6 @@ public class User
     private Boolean accountNonLocked;
     private int failedAttempts;
     private Date lockTime;
-    private String reset_token;
+    private String resetToken;
 
 }

@@ -17,4 +17,7 @@ public interface UserService
     public void resetAttempts(int userId);
 
     void updateUserResetToken(String email, String resetToken);
+    public User getUserByToken(String token);
+
+    public User updateUserPassword(User user);
 }
