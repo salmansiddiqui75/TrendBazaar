@@ -25,7 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         User user = repository.findByEmail(username);
 
-       // String storedPasswordHash = "1234"; // Example hash
+        // String storedPasswordHash = "1234"; // Example hash
 
         //System.out.println(passwordEncoder.matches(user.getPassword(),passwordEncoder.encode(storedPasswordHash)));
 

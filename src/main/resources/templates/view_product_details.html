@@ -10,9 +10,20 @@
                 <div class="col-md-12 p-5">
                     <div class="row">
 
-                    <div class="col-md-6 text-end">
-                        <img th:src="@{'/img/img/product_img/'+${product.image}}" width="50%"  height="250px" >
-                    </div>
+                        <th:block th:if="${session.successMsg}">
+                            <p class="text-success text-center alert alert-success">[[${session.successMsg}]]</p>
+                            <th:block th:text="${@commonServiceImpl.removeSessionMessage()}"></th:block>
+                        </th:block>
+
+                        <th:block th:if="${session.errorMsg}">
+                            <p class="text-success text-center alert alert-danger">[[${session.errorMsg}]]</p>
+                            <th:block th:text="${@commonServiceImpl.removeSessionMessage()}"></th:block>
+                        </th:block>
+
+                        <div class="col-md-6 text-end">
+                            <img alt="" th:src="@{'/img/img/product_img/'+${product.image}}" width="300px"
+                                 height="250px">
+                        </div>
                     <div class="col-md-6">
                         <p class="fs-3">[[${product.title}]]</p>
                         <p>
@@ -53,9 +64,18 @@
                                 <p>Free Shipping</p>
                             </div>
                         </div>
+
                         <th:block th:if="${product.stock>0}">
-                            <a href="#" class="btn btn-danger col-md-12 ">Add to Cart</a>
+                            <th:block th:if="${loginUser==null}">
+                                <a href="/signin" class="btn btn-danger col-md-12 ">Add to Cart</a>
+                            </th:block>
+                            <th:block th:unless="${loginUser==null}">
+                                <a th:href="@{'/user/addCart?pid='+${product.id}+'&uid='+${loginUser.id}}"
+                                   class="btn btn-danger col-md-12 ">Add to Cart</a>
+                            </th:block>
                         </th:block>
+
+
                         <th:block th:unless="${product.stock>0}">
                             <a href="#" class="btn text-white btn-warning col-md-12 ">Out Of Stock</a>
                         </th:block>

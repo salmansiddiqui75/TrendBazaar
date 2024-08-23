@@ -15,8 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 @Getter
 @Entity
-public class Category
-{
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;

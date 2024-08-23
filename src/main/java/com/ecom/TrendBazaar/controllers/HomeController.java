@@ -3,6 +3,7 @@ package com.ecom.TrendBazaar.controllers;
 import com.ecom.TrendBazaar.model.Category;
 import com.ecom.TrendBazaar.model.Product;
 import com.ecom.TrendBazaar.model.User;
+import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
@@ -32,8 +33,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Controller
-public class HomeController
-{
+public class HomeController {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
@@ -45,9 +45,11 @@ public class HomeController
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private CartService cartService;
+
     @GetMapping("/index")
-    public String getIndex()
-    {
+    public String getIndex() {
         return "index";
     }
 
@@ -58,61 +60,57 @@ public class HomeController
 
 
     @ModelAttribute
-    public void getLoginUserDetails(Principal principal,Model model)
-    {
-        if(principal!=null)
-        {
+    public void getLoginUserDetails(Principal principal, Model model) {
+        if (principal != null) {
             String email = principal.getName();
             User userByEmail = userService.findByEmail(email);
-            model.addAttribute("loginUser",userByEmail);
+            model.addAttribute("loginUser", userByEmail);
+            int cartCount = cartService.getCartCount(userByEmail.getId());
+            model.addAttribute("cartCount",cartCount);
+
         }
         List<Category> allActiveCategory = categoryService.getAllActiveCategory();
-        model.addAttribute("category",allActiveCategory);
+        model.addAttribute("category", allActiveCategory);
     }
+
     @GetMapping("/register")
-    public String getRegister()
-    {
+    public String getRegister() {
         return "register";
     }
 
     @GetMapping("/product")
-    public String getProduct(Model model, @RequestParam(value = "category",defaultValue = "") String category)
-    {
+    public String getProduct(Model model, @RequestParam(value = "category", defaultValue = "") String category) {
         List<Category> allActiveCategory = categoryService.getAllActiveCategory();
         List<Product> allActiveProduct = productService.getAllActiveProduct(category);
-        model.addAttribute("product",allActiveProduct);
-        model.addAttribute("category",allActiveCategory);
-        model.addAttribute("paramValue",category);
+        model.addAttribute("product", allActiveProduct);
+        model.addAttribute("category", allActiveCategory);
+        model.addAttribute("paramValue", category);
         return "product";
     }
+
     @GetMapping("/view_product/{id}")
-    public String viewProductDetails(@PathVariable int id,Model model)
-    {
+    public String viewProductDetails(@PathVariable int id, Model model) {
         Product productById = productService.getProductById(id);
-        model.addAttribute("product",productById);
+        model.addAttribute("product", productById);
         return "view_product_details";
     }
 
 
-
     @PostMapping("/saveUser")
-    public String saveUser(@ModelAttribute User user, @RequestParam("file")MultipartFile file, HttpSession session) throws IOException {
+    public String saveUser(@ModelAttribute User user, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
         String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
         user.setImage(image);
         User savedUser = userService.saveUser(user);
-        if(!ObjectUtils.isEmpty(savedUser))
-        {
-            if(!file.isEmpty())
-            {
+        if (!ObjectUtils.isEmpty(savedUser)) {
+            if (!file.isEmpty()) {
                 File saveFile = new ClassPathResource("static/img/img").getFile();
                 Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
                 System.out.println(path);
-                Files.copy(file.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
             }
-            session.setAttribute("successMsg","User register successfully");
-        }
-        else {
-            session.setAttribute("errorMsg","Something went wrong");
+            session.setAttribute("successMsg", "User register successfully");
+        } else {
+            session.setAttribute("errorMsg", "Something went wrong");
         }
         return "redirect:/register";
     }
@@ -125,54 +123,47 @@ public class HomeController
     @PostMapping("/forget_password")
     public String processForgetPassword(@RequestParam String email, HttpSession session, HttpServletRequest request) throws MessagingException, UnsupportedEncodingException {
         User user = userService.findByEmail(email);
-        if(ObjectUtils.isEmpty(user))
-        {
-            session.setAttribute("errorMsg","Invalid email");
-        }
-        else{
+        if (ObjectUtils.isEmpty(user)) {
+            session.setAttribute("errorMsg", "Invalid email");
+        } else {
             String resetToken = UUID.randomUUID().toString();
-            userService.updateUserResetToken(email,resetToken);
+            userService.updateUserResetToken(email, resetToken);
 
-            String url =CommonUtil.generateUrl(request)+"/reset_password?token="+resetToken;
+            String url = CommonUtil.generateUrl(request) + "/reset_password?token=" + resetToken;
 
-            Boolean mailSend = commonUtil.sendMail(url,email);
-            if(mailSend)
-            {
-                session.setAttribute("successMsg","Password Reset Link Sent!! Pls check your mail");
-            }else {
-                session.setAttribute("errorMsg","Something went wrong");
+            Boolean mailSend = commonUtil.sendMail(url, email);
+            if (mailSend) {
+                session.setAttribute("successMsg", "Password Reset Link Sent!! Pls check your mail");
+            } else {
+                session.setAttribute("errorMsg", "Something went wrong");
             }
         }
 
         return "redirect:/forgetPassword";
     }
+
     @GetMapping("/reset_password")
-    public String getResetPassword(@RequestParam String token, HttpSession session, Model model)
-    {
+    public String getResetPassword(@RequestParam String token, HttpSession session, Model model) {
         User userByToken = userService.getUserByToken(token);
-        if(userByToken==null)
-        {
-            model.addAttribute("msg","Your link is Invalid or Expired");
+        if (userByToken == null) {
+            model.addAttribute("msg", "Your link is Invalid or Expired");
             return "message";
         }
-        model.addAttribute("token",token);
+        model.addAttribute("token", token);
         return "reset_password.html";
     }
 
     @PostMapping("/reset_password")
-    public String resetPassword(@RequestParam String token,@RequestParam String password, HttpSession session,Model model)
-    {
+    public String resetPassword(@RequestParam String token, @RequestParam String password, HttpSession session, Model model) {
         User userByToken = userService.getUserByToken(token);
-        if(userByToken==null)
-        {
-            model.addAttribute("msg","Your link is Invalid or Expired");
+        if (userByToken == null) {
+            model.addAttribute("msg", "Your link is Invalid or Expired");
             return "message";
-        }
-        else{
+        } else {
             userByToken.setPassword(passwordEncoder.encode(password));
             userByToken.setResetToken(null);
             userService.updateUserPassword(userByToken);
-            model.addAttribute("msg","Password change successfully");
+            model.addAttribute("msg", "Password change successfully");
             return "message";
         }
 

@@ -40,7 +40,6 @@
 <!--                    <button class="btn btn-outline-success" type="submit">Search</button>-->
 <!--                </form>-->
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-
                     <th:block th:if="${loginUser==null}">
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="/signin"> <i class="fa-solid fa-right-to-bracket"></i> Login</a>
@@ -49,17 +48,20 @@
                             <a class="nav-link active" aria-current="page" href="/register">Register</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/admin/index">Admin</a>
+                            <a class="nav-link active" aria-current="page" href="/admin">Admin</a>
                         </li>
                     </th:block>
 
                     <th:block th:if="${loginUser!=null}">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/user/cart"><i class="fa-solid fa-cart-shopping"></i> Cart [ [[${cartCount}]] ]</a>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-user"></i> [[${loginUser.name}]]
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Edit</a></li>
+                                <li><a class="dropdown-item" href="#">Profile</a></li>
                                 <li><a class="dropdown-item" href="#">Another action</a></li>
                             </ul>
                         </li>

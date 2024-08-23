@@ -9,11 +9,11 @@ import org.springframework.util.ObjectUtils;
 import java.util.List;
 
 @Service
-public class ProductServiceImpl implements ProductService
-{
+public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
     @Override
     public Product saveProduct(Product product) {
         return productRepository.save(product);
@@ -27,8 +27,7 @@ public class ProductServiceImpl implements ProductService
     @Override
     public Boolean deleteProduct(int id) {
         Product product = productRepository.findById(id).orElse(null);
-        if(!ObjectUtils.isEmpty(product))
-        {
+        if (!ObjectUtils.isEmpty(product)) {
             productRepository.delete(product);
             return true;
         }
@@ -41,15 +40,12 @@ public class ProductServiceImpl implements ProductService
     }
 
     @Override
-    public List<Product> getAllActiveProduct(String category)
-    {
-        List<Product> product=null;
-        if(ObjectUtils.isEmpty(category))
-        {
-            product=productRepository.findByIsActiveTrue();
-        }
-        else{
-                product=productRepository.findByCategory(category);
+    public List<Product> getAllActiveProduct(String category) {
+        List<Product> product = null;
+        if (ObjectUtils.isEmpty(category)) {
+            product = productRepository.findByIsActiveTrue();
+        } else {
+            product = productRepository.findByCategory(category);
         }
         return product;
     }

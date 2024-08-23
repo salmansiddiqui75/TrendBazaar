@@ -8,10 +8,9 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-public class Product
-{
+public class Product {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Column(length = 500)
     private String title;

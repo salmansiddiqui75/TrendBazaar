@@ -46,8 +46,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean updateUserAccountStatus(int id, Boolean status) {
         Optional<User> byId = repository.findById(id);
-        if (byId.isPresent())
-        {
+        if (byId.isPresent()) {
             User user = byId.get();
             user.setIsEnable(status);
             repository.save(user);
@@ -57,16 +56,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void increaseFailedAttempts(User user)
-    {
-        int failedAttempts = user.getFailedAttempts()+1;
+    public void increaseFailedAttempts(User user) {
+        int failedAttempts = user.getFailedAttempts() + 1;
         user.setFailedAttempts(failedAttempts);
         repository.save(user);
     }
 
     @Override
-    public void userAccountLock(User user)
-    {
+    public void userAccountLock(User user) {
         user.setAccountNonLocked(false);
         user.setLockTime(new Date());
         repository.save(user);
@@ -74,12 +71,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Boolean unlockedAccountTimeExpire(User user)
-    {
+    public Boolean unlockedAccountTimeExpire(User user) {
         long time = user.getLockTime().getTime();
         long unlockTime = time + AppConstant.UNLOCK_DURATION_TIME;
         long currentTime = System.currentTimeMillis();
-        if(unlockTime<currentTime) {
+        if (unlockTime < currentTime) {
             user.setAccountNonLocked(true);
             user.setFailedAttempts(0);
             user.setLockTime(null);

@@ -24,6 +24,7 @@ public class SecurityConfig {
 
     @Autowired
     private AuthenticationSuccessHandler authenticationSuccessHandler;
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -43,19 +44,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception
-    {
-        http.csrf(csrf->csrf.disable()).cors(cors->cors.disable())
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
                 .authorizeHttpRequests(req -> req
-            .requestMatchers("/admin/**").hasRole("ADMIN")
-            .requestMatchers("/user/**").hasRole("USER")
-            .requestMatchers("/**").permitAll())
-            .formLogin(form->form.loginPage("/signin")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/**").permitAll())
+                .formLogin(form -> form.loginPage("/signin")
                         .loginProcessingUrl("/login")
-                    .failureHandler(authFailureHandler)
+                        .failureHandler(authFailureHandler)
 //						.defaultSuccessUrl("/")
                         .successHandler(authenticationSuccessHandler))
-                .logout(logout->logout.permitAll());
+                .logout(logout -> logout.permitAll());
 
         return http.build();
     }
