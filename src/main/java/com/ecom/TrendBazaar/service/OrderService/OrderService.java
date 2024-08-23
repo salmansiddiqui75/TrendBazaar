@@ -1,10 +1,9 @@
 package com.ecom.TrendBazaar.service.OrderService;
 
-import com.ecom.TrendBazaar.model.ProductOrder;
-import lombok.Setter;
-
+import com.ecom.TrendBazaar.model.OrderRequest;
 
 public interface OrderService
 {
-    public ProductOrder saveOrder(int userId);
+    public void saveOrder(int userId, OrderRequest orderRequest);
+
 }

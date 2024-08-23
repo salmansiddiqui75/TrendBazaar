@@ -2,19 +2,18 @@ package com.ecom.TrendBazaar.controllers;
 
 import com.ecom.TrendBazaar.model.Cart;
 import com.ecom.TrendBazaar.model.Category;
+import com.ecom.TrendBazaar.model.OrderRequest;
 import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
+import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -30,6 +29,8 @@ public class UserController {
 
     @Autowired
     private CartService cartService;
+    @Autowired
+    private OrderService orderService;
 
     @RequestMapping("/")
     public String home() {
@@ -89,5 +90,13 @@ public class UserController {
     public String getOrderPage()
     {
         return "/user/order";
+    }
+
+    @PostMapping("save-order")
+    public String saveOrder(@ModelAttribute OrderRequest orderRequest,Principal principal)
+    {
+        User userDetails = getLoggedInUserDetails(principal);
+        orderService.saveOrder(userDetails.getId(),orderRequest);
+        return "/user/success";
     }
 }
