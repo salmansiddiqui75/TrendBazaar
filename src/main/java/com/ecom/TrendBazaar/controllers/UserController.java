@@ -1,13 +1,11 @@
 package com.ecom.TrendBazaar.controllers;
 
-import com.ecom.TrendBazaar.model.Cart;
-import com.ecom.TrendBazaar.model.Category;
-import com.ecom.TrendBazaar.model.OrderRequest;
-import com.ecom.TrendBazaar.model.User;
+import com.ecom.TrendBazaar.model.*;
 import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.OrderStatus;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -87,8 +85,19 @@ public class UserController {
     }
 
     @GetMapping("order")
-    public String getOrderPage()
+    public String getOrderPage(Principal principal,Model model)
     {
+        User userDetails=getLoggedInUserDetails(principal);
+        List<Cart> cartByUserId = cartService.getCartByUserId(userDetails.getId());
+        model.addAttribute("carts",cartByUserId);
+        if(cartByUserId.size()>0) {
+            Double orderPrice = cartByUserId.get(cartByUserId.size() - 1).getTotalOrderPrice();
+            Double TotalOrderPrice = cartByUserId.get(cartByUserId.size() - 1).getTotalOrderPrice()+200+100;
+
+            model.addAttribute("orderPrice", orderPrice);
+            model.addAttribute("TotalOrderPrice", TotalOrderPrice);
+
+        }
         return "/user/order";
     }
 
@@ -97,6 +106,43 @@ public class UserController {
     {
         User userDetails = getLoggedInUserDetails(principal);
         orderService.saveOrder(userDetails.getId(),orderRequest);
+        return "redirect:/user/success";
+    }
+
+    @GetMapping("/success")
+    public String loadSuccess()
+    {
         return "/user/success";
+    }
+    @GetMapping("/user-orders")
+    public String myOrder(Principal principal,Model model)
+    {
+        User userDetails = getLoggedInUserDetails(principal);
+        List<ProductOrder> orderByUserId = orderService.getOrderByUserId(userDetails.getId());
+        model.addAttribute("orders",orderByUserId);
+        return "/user/my_order";
+    }
+
+    @GetMapping("/update-status")
+    public String updateOrderStatus(@RequestParam int id , @RequestParam int st,HttpSession session)
+    {
+        OrderStatus[] values = OrderStatus.values();
+        String status=null;
+        for(OrderStatus orderStatus : values)
+        {
+            if(orderStatus.getId()==st)
+            {
+                status=orderStatus.getName();
+            }
+        }
+        Boolean b = orderService.updateOrderStatus(id, status);
+        if(b)
+        {
+            session.setAttribute("successMsg","Status update sucessfully");
+        }
+        else{
+            session.setAttribute("errorMsg","Something went wrong");
+        }
+        return "redirect:/user/user-orders";
     }
 }

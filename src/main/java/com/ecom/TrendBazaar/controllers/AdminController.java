@@ -2,9 +2,11 @@ package com.ecom.TrendBazaar.controllers;
 
 import com.ecom.TrendBazaar.model.Category;
 import com.ecom.TrendBazaar.model.Product;
+import com.ecom.TrendBazaar.model.ProductOrder;
 import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
+import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -36,6 +38,8 @@ public class AdminController {
     private ProductService productService;
     @Autowired
     private CartService cartService;
+    @Autowired
+    private OrderService orderService;
 
     @GetMapping("/")
     public String getIndex() {
@@ -257,6 +261,14 @@ public class AdminController {
         }
 
         return "redirect:/admin/users";
+    }
+
+    @GetMapping("/orders")
+    public String getAllOrder(Model model) 
+    {
+        List<ProductOrder> allOrders = orderService.getAllOrders();
+        model.addAttribute("orders",allOrders);
+        return "/admin/order";
     }
 
 }

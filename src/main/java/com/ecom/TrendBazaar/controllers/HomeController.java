@@ -48,7 +48,7 @@ public class HomeController {
     @Autowired
     private CartService cartService;
 
-    @GetMapping("/index")
+    @GetMapping("/")
     public String getIndex() {
         return "index";
     }

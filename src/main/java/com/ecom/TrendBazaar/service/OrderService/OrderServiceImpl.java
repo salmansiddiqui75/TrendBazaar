@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -50,6 +51,32 @@ public class OrderServiceImpl implements OrderService
 
             orderRepository.save(order);
         }
+    }
+
+    @Override
+    public List<ProductOrder> getOrderByUserId(int id)
+    {
+        List<ProductOrder> orders=orderRepository.findByUserId(id);
+        return orders;
+    }
+
+    @Override
+    public Boolean updateOrderStatus(int id, String status) {
+        Optional<ProductOrder> byUserId = orderRepository.findById(id);
+        if(byUserId.isPresent())
+        {
+            ProductOrder order = byUserId.get();
+            order.setStatus(status);
+            orderRepository.save(order);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public List<ProductOrder> getAllOrders()
+    {
+        return orderRepository.findAll();
     }
 
 
