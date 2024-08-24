@@ -26,4 +26,5 @@ public interface UserService {
     public User getUserByToken(String token);
 
     public User updateUserPassword(User user);
+    public User updateUserProfile(User user);
 }

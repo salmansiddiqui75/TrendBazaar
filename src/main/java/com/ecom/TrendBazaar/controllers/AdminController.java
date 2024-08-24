@@ -9,6 +9,9 @@ import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.CommonUtil;
+import com.ecom.TrendBazaar.util.OrderStatus;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,6 +44,8 @@ public class AdminController {
     private CartService cartService;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private CommonUtil commonUtil;
 
     @GetMapping("/")
     public String getIndex() {
@@ -269,6 +275,30 @@ public class AdminController {
         List<ProductOrder> allOrders = orderService.getAllOrders();
         model.addAttribute("orders",allOrders);
         return "/admin/order";
+    }
+
+    @PostMapping("/update-order-status")
+    public String updateOrderStatus(@RequestParam int id , @RequestParam int st,HttpSession session) throws MessagingException, UnsupportedEncodingException {
+        OrderStatus[] values = OrderStatus.values();
+        String status=null;
+        for(OrderStatus orderStatus : values)
+        {
+            if(orderStatus.getId()==st)
+            {
+                status=orderStatus.getName();
+            }
+        }
+        ProductOrder productOrder = orderService.updateOrderStatus(id, status);
+        commonUtil.sendMailForProductOrder(productOrder,status);
+
+        if(!ObjectUtils.isEmpty(productOrder))
+        {
+            session.setAttribute("successMsg","Status update successfully");
+        }
+        else{
+            session.setAttribute("errorMsg","Something went wrong");
+        }
+        return "redirect:/admin/orders";
     }
 
 }

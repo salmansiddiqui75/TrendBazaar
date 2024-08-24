@@ -6,10 +6,13 @@ import com.ecom.TrendBazaar.model.OrderRequest;
 import com.ecom.TrendBazaar.model.ProductOrder;
 import com.ecom.TrendBazaar.repository.CartRepository.CartRepository;
 import com.ecom.TrendBazaar.repository.OrderRepository.OrderRepository;
+import com.ecom.TrendBazaar.util.CommonUtil;
 import com.ecom.TrendBazaar.util.OrderStatus;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +26,11 @@ public class OrderServiceImpl implements OrderService
     @Autowired
     private CartRepository cartRepository;
 
+    @Autowired
+    private CommonUtil commonUtil;
+
     @Override
-    public void saveOrder(int userId, OrderRequest orderRequest) {
+    public void saveOrder(int userId, OrderRequest orderRequest) throws MessagingException, UnsupportedEncodingException {
         List<Cart> cartList = cartRepository.findByUserId(userId);
         for (Cart cart : cartList) {
             ProductOrder order = new ProductOrder();
@@ -49,7 +55,9 @@ public class OrderServiceImpl implements OrderService
 
             order.setBillingAddress(billingAddress);
 
-            orderRepository.save(order);
+
+            ProductOrder saved = orderRepository.save(order);
+            commonUtil.sendMailForProductOrder(saved,"success");
         }
     }
 
@@ -61,16 +69,16 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
-    public Boolean updateOrderStatus(int id, String status) {
+    public ProductOrder updateOrderStatus(int id, String status) {
         Optional<ProductOrder> byUserId = orderRepository.findById(id);
         if(byUserId.isPresent())
         {
             ProductOrder order = byUserId.get();
             order.setStatus(status);
-            orderRepository.save(order);
-            return true;
+            ProductOrder save = orderRepository.save(order);
+            return save;
         }
-        return false;
+        return null;
     }
 
     @Override

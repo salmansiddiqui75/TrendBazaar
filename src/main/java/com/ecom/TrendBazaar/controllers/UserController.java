@@ -5,7 +5,10 @@ import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.CommonUtil;
 import com.ecom.TrendBazaar.util.OrderStatus;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.List;
 
@@ -29,6 +33,8 @@ public class UserController {
     private CartService cartService;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private CommonUtil commonUtil;
 
     @RequestMapping("/")
     public String home() {
@@ -102,8 +108,7 @@ public class UserController {
     }
 
     @PostMapping("save-order")
-    public String saveOrder(@ModelAttribute OrderRequest orderRequest,Principal principal)
-    {
+    public String saveOrder(@ModelAttribute OrderRequest orderRequest,Principal principal) throws MessagingException, UnsupportedEncodingException {
         User userDetails = getLoggedInUserDetails(principal);
         orderService.saveOrder(userDetails.getId(),orderRequest);
         return "redirect:/user/success";
@@ -124,8 +129,7 @@ public class UserController {
     }
 
     @GetMapping("/update-status")
-    public String updateOrderStatus(@RequestParam int id , @RequestParam int st,HttpSession session)
-    {
+    public String updateOrderStatus(@RequestParam int id , @RequestParam int st,HttpSession session) throws MessagingException, UnsupportedEncodingException {
         OrderStatus[] values = OrderStatus.values();
         String status=null;
         for(OrderStatus orderStatus : values)
@@ -135,8 +139,10 @@ public class UserController {
                 status=orderStatus.getName();
             }
         }
-        Boolean b = orderService.updateOrderStatus(id, status);
-        if(b)
+        ProductOrder productOrder = orderService.updateOrderStatus(id, status);
+        commonUtil.sendMailForProductOrder(productOrder,status);
+
+        if(!ObjectUtils.isEmpty(productOrder))
         {
             session.setAttribute("successMsg","Status update sucessfully");
         }
@@ -144,5 +150,17 @@ public class UserController {
             session.setAttribute("errorMsg","Something went wrong");
         }
         return "redirect:/user/user-orders";
+    }
+
+    @GetMapping("/profile")
+    public String profile()
+    {
+        return "/user/profile";
+    }
+
+    @PostMapping("/update-profile")
+    public String updateProfile(@ModelAttribute User user, @ModelAttribute Multipart file)
+    {
+        return "redirect:/user/profile";
     }
 }

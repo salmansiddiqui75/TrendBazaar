@@ -106,4 +106,9 @@ public class UserServiceImpl implements UserService {
     public User updateUserPassword(User user) {
         return repository.save(user);
     }
+
+    @Override
+    public User updateUserProfile(User user) {
+        return null;
+    }
 }

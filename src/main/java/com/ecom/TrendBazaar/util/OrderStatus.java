@@ -7,7 +7,8 @@ public enum OrderStatus
     PRODUCT_PACK(3,"Product Pack"),
     OUT_FOR_DELIVERY(4,"Out for Delivery"),
     DELIVERED(5,"Delivered"),
-    CANCEL(6,"Cancelled");
+    CANCEL(6,"Cancelled"),
+    SUCCESS(7,"Success");
 
         private int id;
         private String name;

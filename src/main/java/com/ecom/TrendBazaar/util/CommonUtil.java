@@ -1,5 +1,6 @@
 package com.ecom.TrendBazaar.util;
 
+import com.ecom.TrendBazaar.model.ProductOrder;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,5 +48,48 @@ public class CommonUtil {
     public static String generateUrl(HttpServletRequest request) {
         String siteUrl = request.getRequestURL().toString();
         return siteUrl.replace(request.getServletPath(), "");
+    }
+
+    String msg=null;
+
+
+
+
+    public Boolean sendMailForProductOrder(ProductOrder productOrder,String status) throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+
+        msg = "<p>Hello [[name]],</p>"
+                + "<p>Thank you for placing your order with Trending Bazaar!</p>"
+                + "<p>Your order status is: <b>[[orderStatus]]</b>.</p>"
+                + "<p><b>Product Details:</b></p>"
+                + "<p>Name: [[productName]]</p>"
+                + "<p>Category: [[category]]</p>"
+                // +  "<p>Quantity: [[quantity]]</p>"
+                + "<p>Price: [[price]]</p>"
+                + "<p>Payment Type: [[paymentType]]</p>"
+                + "<p>If you have any questions, feel free to contact our support team.</p>"
+                + "<p>Thanks again for choosing us!<br/>Trending Bazaar Support Team</p>";
+
+        // Use MimeMessageHelper to configure the message
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true, "UTF-8");
+        mimeMessageHelper.setFrom("trendingbazaar429@gmail.com", "Trending Bazaar");
+        mimeMessageHelper.setTo(productOrder.getBillingAddress().getEmail());
+        mimeMessageHelper.setSubject("Order status");
+
+        // Create the HTML content
+        msg=msg.replace("[[name]]",productOrder.getBillingAddress().getFirstName());
+        msg=msg.replace("[[orderStatus]]",status);
+        msg=msg.replace("[[productName]]", productOrder.getProduct().getTitle());
+        msg=msg.replace("[[category]]", productOrder.getProduct().getCategory());
+       // msg=msg.replace("[[quantity]]", productOrder.getQuantity());
+        msg=msg.replace("[[price]]", productOrder.getPrice().toString());
+        msg=msg.replace("[[paymentType]]", productOrder.getPaymentType());
+        // Set the email content as HTML
+        mimeMessageHelper.setText(msg, true);
+
+        // Send the email
+        javaMailSender.send(message);
+
+        return true;
     }
 }
