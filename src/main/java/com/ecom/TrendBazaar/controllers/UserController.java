@@ -8,14 +8,15 @@ import com.ecom.TrendBazaar.service.UserService.UserService;
 import com.ecom.TrendBazaar.util.CommonUtil;
 import com.ecom.TrendBazaar.util.OrderStatus;
 import jakarta.mail.MessagingException;
-import jakarta.mail.Multipart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.List;
@@ -159,8 +160,16 @@ public class UserController {
     }
 
     @PostMapping("/update-profile")
-    public String updateProfile(@ModelAttribute User user, @ModelAttribute Multipart file)
-    {
+    public String updateProfile(@ModelAttribute User user, @RequestParam("file") MultipartFile file,HttpSession httpSession) throws IOException {
+        User updateUserProfile = userService.updateUserProfile(user, file);
+        if (ObjectUtils.isEmpty(updateUserProfile))
+        {
+            httpSession.setAttribute("errorMsg","Something went wrong!! Profile not updated");
+        }
+        else{
+            httpSession.setAttribute("successMsg","Profile updated successfully");
+        }
+
         return "redirect:/user/profile";
     }
 }

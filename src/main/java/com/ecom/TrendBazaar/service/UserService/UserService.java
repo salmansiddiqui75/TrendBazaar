@@ -1,7 +1,10 @@
 package com.ecom.TrendBazaar.service.UserService;
 
 import com.ecom.TrendBazaar.model.User;
+import jakarta.mail.Multipart;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface UserService {
@@ -26,5 +29,5 @@ public interface UserService {
     public User getUserByToken(String token);
 
     public User updateUserPassword(User user);
-    public User updateUserProfile(User user);
+    public User updateUserProfile(User user, MultipartFile file) throws IOException;
 }

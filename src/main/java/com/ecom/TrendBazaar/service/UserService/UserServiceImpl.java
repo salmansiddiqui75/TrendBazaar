@@ -3,10 +3,20 @@ package com.ecom.TrendBazaar.service.UserService;
 import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.repository.UserRepository.UserRepository;
 import com.ecom.TrendBazaar.util.AppConstant;
+import jakarta.mail.Multipart;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -106,9 +116,26 @@ public class UserServiceImpl implements UserService {
     public User updateUserPassword(User user) {
         return repository.save(user);
     }
-
     @Override
-    public User updateUserProfile(User user) {
-        return null;
+    public User updateUserProfile(User user,MultipartFile file) throws IOException {
+        User dbUser = repository.findById(user.getId()).get();
+        String imageName = file.isEmpty() ? dbUser.getImage() : file.getOriginalFilename();
+        if(!ObjectUtils.isEmpty(dbUser))
+        {
+            dbUser.setName(user.getName());
+            dbUser.setMobileNumber(user.getMobileNumber());
+            dbUser.setAddress(user.getAddress());
+            dbUser.setCity(user.getCity());
+            dbUser.setState(user.getState());
+            dbUser.setPincode(user.getPincode());
+            dbUser = repository.save(dbUser);
+        }
+        if (!file.isEmpty()) {
+            File saveFile = new ClassPathResource("static/img/img").getFile();
+            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+            System.out.println(path);
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return dbUser;
     }
 }
