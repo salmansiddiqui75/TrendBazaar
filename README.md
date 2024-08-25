@@ -1,1 +1,2 @@
 This is an e-commerce project
+TrendingBazaar is an innovative e-commerce platform built using Spring Boot and MySQL, designed to streamline the online shopping experience. It features a user-friendly interface with robust functionalities like advanced product search, secure payment integration, dynamic pricing, and real-time order tracking. The platform supports seamless user and admin dashboards, providing detailed sales analytics and efficient inventory management.
