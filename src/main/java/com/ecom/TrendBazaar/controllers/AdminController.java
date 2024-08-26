@@ -15,6 +15,8 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Page;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
@@ -47,6 +49,9 @@ public class AdminController {
     @Autowired
     private CommonUtil commonUtil;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @GetMapping("/")
     public String getIndex() {
         return "admin/index";
@@ -73,8 +78,21 @@ public class AdminController {
     }
 
     @GetMapping("/getAddCategory")
-    public String getAddCategory(Model model) {
-        model.addAttribute("categories", categoryService.getAllCategory());
+    public String getAddCategory(Model model,@RequestParam(name="pageNo",defaultValue = "0")int pageNo,
+                                 @RequestParam(name = "pageSize",defaultValue = "2")int pageSize)
+    {
+        Page<Category> page = categoryService.getAllCategoryPagination(pageNo, pageSize);
+
+        //model.addAttribute("categories", categoryService.getAllCategory());
+
+        List<Category> categories = page.getContent();
+        model.addAttribute("categories", categories);
+        model.addAttribute("pageNo", page.getNumber());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("totalElements", page.getTotalElements());
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("isFirst", page.isFirst());
+        model.addAttribute("isLast", page.isLast());
         return "admin/add_category";
     }
 
@@ -164,9 +182,23 @@ public class AdminController {
     }
 
     @GetMapping("/viewProduct")
-    public String viewProduct(@ModelAttribute Product product, Model model) {
-        List<Product> allProduct = productService.getAllProduct();
-        model.addAttribute("allProduct", allProduct);
+    public String viewProduct(@ModelAttribute Product product,@RequestParam(defaultValue = "")String ch, Model model,@RequestParam(name="pageNo",defaultValue = "0")int pageNo,
+                              @RequestParam(name = "pageSize",defaultValue = "8")int pageSize)
+    {
+//        List<Product> allProduct = productService.getAllProduct();
+//        model.addAttribute("allProduct", allProduct);
+
+        Page<Product> page = productService.getAllActiveProductPagination(pageNo, pageSize, ch);
+
+        List<Product> products = page.getContent();
+        model.addAttribute("allProduct", products);
+        model.addAttribute("pageNo", page.getNumber());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("totalElements", page.getTotalElements());
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("isFirst", page.isFirst());
+        model.addAttribute("isLast", page.isLast());
+
         return "admin/view_product";
     }
 
@@ -250,14 +282,22 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public String getAllUser(Model model) {
-        List<User> users = userService.getAllUser("ROLE_USER");
+    public String getAllUser(Model model,@RequestParam int type) {
+        List<User>users=null;
+        if (type==1)
+        {
+            users = userService.getAllUser("ROLE_USER");
+        }else{
+            users=userService.getAllUser("ROLE_ADMIN");
+        }
+        model.addAttribute("userType",type);
         model.addAttribute("user", users);
         return "/admin/all_user";
     }
 
     @GetMapping("/updateStatus")
-    public String updateUserAccountStatus(@RequestParam Boolean status, @RequestParam int id, HttpSession session) {
+    public String updateUserAccountStatus(@RequestParam Boolean status, @RequestParam int id,
+                                          @RequestParam int type,HttpSession session) {
         Boolean b = userService.updateUserAccountStatus(id, status);
 
         if (b) {
@@ -266,14 +306,29 @@ public class AdminController {
             session.setAttribute("errorMsg", "Something went wrong");
         }
 
-        return "redirect:/admin/users";
+        return "redirect:/admin/users?type="+type;
     }
 
     @GetMapping("/orders")
-    public String getAllOrder(Model model) 
+    public String getAllOrder(Model model,@RequestParam(name="pageNo",defaultValue = "0")int pageNo,
+                              @RequestParam(name = "pageSize",defaultValue = "4")int pageSize)
     {
-        List<ProductOrder> allOrders = orderService.getAllOrders();
-        model.addAttribute("orders",allOrders);
+//        List<ProductOrder> allOrders = orderService.getAllOrders();
+//        model.addAttribute("orders", allOrders);
+
+        Page<ProductOrder> page = orderService.getAllOrdersPagination(pageNo, pageSize);
+        model.addAttribute("srch", false);
+
+        List<ProductOrder> orders= page.getContent();
+        model.addAttribute("orders", orders);
+        model.addAttribute("orderSize", orders.size());
+        model.addAttribute("pageNo", page.getNumber());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("totalElements", page.getTotalElements());
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("isFirst", page.isFirst());
+        model.addAttribute("isLast", page.isLast());
+
         return "/admin/order";
     }
 
@@ -299,6 +354,113 @@ public class AdminController {
             session.setAttribute("errorMsg","Something went wrong");
         }
         return "redirect:/admin/orders";
+    }
+
+
+    @GetMapping("/search-order")
+    public String searchOrder(@RequestParam String orderId, Model m, HttpSession session,@RequestParam(name="pageNo",defaultValue = "0")int pageNo,
+                              @RequestParam(name = "pageSize",defaultValue = "9")int pageSize) {
+
+        if (orderId != null && orderId.length() > 0) {
+
+            ProductOrder order = orderService.findOrderByOrderId(orderId.trim());
+
+            if (ObjectUtils.isEmpty(order)) {
+                session.setAttribute("errorMsg", "Incorrect orderId");
+                m.addAttribute("order", null);
+            } else {
+                m.addAttribute("order", order);
+            }
+
+            m.addAttribute("srch", true);
+        } else {
+//			List<ProductOrder> allOrders = orderService.getAllOrders();
+//			m.addAttribute("orders", allOrders);
+//			m.addAttribute("srch", false);
+
+            Page<ProductOrder>page = orderService.getAllOrdersPagination(pageNo,pageSize);
+            m.addAttribute("orders", page);
+            m.addAttribute("srch", false);
+
+            m.addAttribute("pageNo", page.getNumber());
+            m.addAttribute("pageSize", pageSize);
+            m.addAttribute("totalElements", page.getTotalElements());
+            m.addAttribute("totalPages", page.getTotalPages());
+            m.addAttribute("isFirst", page.isFirst());
+            m.addAttribute("isLast", page.isLast());
+        }
+        return "/admin/order";
+    }
+
+    @GetMapping("/add-admin")
+    public String loadAddAdmin()
+    {
+        return "/admin/add_admin";
+    }
+
+    @PostMapping("/save-admin")
+    public String addAdmin(@ModelAttribute User user, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
+        String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
+        user.setImage(image);
+        User addAdmin = userService.addAdmin(user);
+        if (!ObjectUtils.isEmpty(addAdmin)) {
+            if (!file.isEmpty()) {
+                File saveFile = new ClassPathResource("static/img/img").getFile();
+                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+                System.out.println(path);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            }
+            session.setAttribute("successMsg", "New admin added successfully");
+        } else {
+            session.setAttribute("errorMsg", "Something went wrong");
+        }
+        return "redirect:/admin/add-admin";
+    }
+    @GetMapping("/profile")
+    public String adminProfile()
+    {
+        return "/admin/profile";
+    }
+    @PostMapping("/update-profile")
+    public String updateProfile(@ModelAttribute User user, @RequestParam("file") MultipartFile file,HttpSession httpSession) throws IOException {
+        User updateUserProfile = userService.updateUserProfile(user, file);
+        if (ObjectUtils.isEmpty(updateUserProfile))
+        {
+            httpSession.setAttribute("errorMsg","Something went wrong!! Profile not updated");
+        }
+        else{
+            httpSession.setAttribute("successMsg","Profile updated successfully");
+        }
+
+        return "redirect:/admin/profile";
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(@RequestParam String currentPassword,@RequestParam String newPassword,Principal principal,
+                                 HttpSession session)
+    {
+        User loggedInUserDetails =commonUtil.getLoggedInUserDetails(principal);
+
+        boolean matches = passwordEncoder.matches(currentPassword, loggedInUserDetails.getPassword());
+
+        if(matches)
+        {
+            String encoded = passwordEncoder.encode(newPassword);
+            loggedInUserDetails.setPassword(encoded);
+            User user = userService.updateUserPassword(loggedInUserDetails);
+            if (ObjectUtils.isEmpty(user))
+            {
+                session.setAttribute("errorMsg","Something went wrong");
+            }
+            else {
+                session.setAttribute("successMsg","Password update successfully");
+            }
+        }
+        else {
+            session.setAttribute("errorMsg","Current password is incorrect!!");
+        }
+
+        return "redirect:/admin/profile";
     }
 
 }

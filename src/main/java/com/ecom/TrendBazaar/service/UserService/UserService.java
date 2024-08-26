@@ -30,4 +30,7 @@ public interface UserService {
 
     public User updateUserPassword(User user);
     public User updateUserProfile(User user, MultipartFile file) throws IOException;
+
+    public User addAdmin(User user);
+
 }

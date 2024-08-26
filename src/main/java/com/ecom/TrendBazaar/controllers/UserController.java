@@ -10,6 +10,7 @@ import com.ecom.TrendBazaar.util.OrderStatus;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
@@ -29,6 +30,8 @@ public class UserController {
 
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CartService cartService;
@@ -168,6 +171,33 @@ public class UserController {
         }
         else{
             httpSession.setAttribute("successMsg","Profile updated successfully");
+        }
+
+        return "redirect:/user/profile";
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(@RequestParam String currentPassword,@RequestParam String newPassword,Principal principal,
+                                 HttpSession session)
+    {
+        User loggedInUserDetails = getLoggedInUserDetails(principal);
+        boolean matches = passwordEncoder.matches(currentPassword, loggedInUserDetails.getPassword());
+
+        if(matches)
+        {
+            String encoded = passwordEncoder.encode(newPassword);
+            loggedInUserDetails.setPassword(encoded);
+            User user = userService.updateUserPassword(loggedInUserDetails);
+            if (ObjectUtils.isEmpty(user))
+            {
+                session.setAttribute("errorMsg","Something went wrong");
+            }
+            else {
+                session.setAttribute("successMsg","Password update successfully");
+            }
+        }
+        else {
+            session.setAttribute("errorMsg","Current password is incorrect!!");
         }
 
         return "redirect:/user/profile";

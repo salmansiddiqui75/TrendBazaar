@@ -1,6 +1,8 @@
 package com.ecom.TrendBazaar.util;
 
 import com.ecom.TrendBazaar.model.ProductOrder;
+import com.ecom.TrendBazaar.model.User;
+import com.ecom.TrendBazaar.service.UserService.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,12 +12,15 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
+import java.security.Principal;
 
 @Component
 public class CommonUtil {
 
     @Autowired
     private JavaMailSender javaMailSender;
+    @Autowired
+    private UserService userService;
 
     public Boolean sendMail(String url, String reciepentMail) throws MessagingException, UnsupportedEncodingException {
         // Create a MimeMessage
@@ -91,5 +96,12 @@ public class CommonUtil {
         javaMailSender.send(message);
 
         return true;
+    }
+
+    public User getLoggedInUserDetails(Principal principal)
+    {
+        String name = principal.getName();
+        User user = userService.findByEmail(name);
+        return user;
     }
 }

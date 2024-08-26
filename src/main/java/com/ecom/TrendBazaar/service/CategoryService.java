@@ -1,6 +1,8 @@
 package com.ecom.TrendBazaar.service;
 
 import com.ecom.TrendBazaar.model.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -15,4 +17,6 @@ public interface CategoryService
 
     Category getByIdCategory(int id);
     public List<Category> getAllActiveCategory();
+
+    public Page<Category> getAllCategoryPagination(int pageNo ,int pageSize);
 }

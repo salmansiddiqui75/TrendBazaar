@@ -12,12 +12,13 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.Banner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,7 +50,13 @@ public class HomeController {
     private CartService cartService;
 
     @GetMapping("/")
-    public String getIndex() {
+    public String getIndex(Model model)
+    {
+        List<Category> categoryList = categoryService.getAllActiveCategory().stream().limit(6).toList();
+        List<Product> productList = productService.getAllActiveProduct("").stream()
+                .limit(8).toList();
+        model.addAttribute("category",categoryList);
+        model.addAttribute("product",productList);
         return "index";
     }
 
@@ -79,12 +86,32 @@ public class HomeController {
     }
 
     @GetMapping("/product")
-    public String getProduct(Model model, @RequestParam(value = "category", defaultValue = "") String category) {
+    public String getProduct(Model model, @RequestParam(value = "category", defaultValue = "") String category,
+    @RequestParam(name="pageNo",defaultValue = "0")int pageNo,
+     @RequestParam(name = "pageSize",defaultValue = "9")int pageSize,@RequestParam(defaultValue = "") String ch)
+    {
         List<Category> allActiveCategory = categoryService.getAllActiveCategory();
-        List<Product> allActiveProduct = productService.getAllActiveProduct(category);
-        model.addAttribute("product", allActiveProduct);
+        //List<Product> allActiveProduct = productService.getAllActiveProduct(category);
+        //model.addAttribute("product", allActiveProduct);
         model.addAttribute("category", allActiveCategory);
         model.addAttribute("paramValue", category);
+        Page<Product> page =null;
+        if (StringUtils.isEmpty(ch))
+        {
+            page = productService.getAllActiveProductPagination(pageNo, pageSize, category);
+        }else{
+            page=productService.searchActiveProductPagination(pageNo,pageSize,category,ch);
+        }
+        List<Product> products = page.getContent();
+        model.addAttribute("product", products);
+        model.addAttribute("productSize", products.size());
+
+        model.addAttribute("pageNo", page.getNumber());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("totalElements", page.getTotalElements());
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("isFirst", page.isFirst());
+        model.addAttribute("isLast", page.isLast());
         return "product";
     }
 
@@ -167,6 +194,15 @@ public class HomeController {
             return "message";
         }
 
+    }
+@GetMapping("/search")
+    public String searchProduct(@RequestParam String ch,Model model)
+    {
+        List<Product> searchProduct = productService.searchProduct(ch);
+        List<Category> allActiveCategory = categoryService.getAllActiveCategory();
+        model.addAttribute("category", allActiveCategory);
+        model.addAttribute("product",searchProduct);
+        return "/product";
     }
 
 

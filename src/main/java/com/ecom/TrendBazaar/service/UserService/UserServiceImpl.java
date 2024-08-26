@@ -128,6 +128,7 @@ public class UserServiceImpl implements UserService {
             dbUser.setCity(user.getCity());
             dbUser.setState(user.getState());
             dbUser.setPincode(user.getPincode());
+            dbUser.setImage(imageName);
             dbUser = repository.save(dbUser);
         }
         if (!file.isEmpty()) {
@@ -137,5 +138,17 @@ public class UserServiceImpl implements UserService {
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
         }
         return dbUser;
+    }
+
+    @Override
+    public User addAdmin(User user) {
+        user.setAccountNonLocked(true);
+        user.setFailedAttempts(0);
+        user.setIsEnable(true);
+        user.setRole("ROLE_ADMIN");
+        String encoded = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encoded.trim());
+        User saved = repository.save(user);
+        return saved;
     }
 }

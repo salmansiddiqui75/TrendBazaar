@@ -35,46 +35,11 @@
         <div class="container">
             <div class="row">
                 <p class="text-center fs-4">Category</p>
-                <div class="col-md-2">
+                <div class="col-md-2" th:each="c:${category}">
                     <!--<div class="card rounded-square">-->
                         <div card-body text-center></div>
-                        <img src="img\img\category_img\Electronis.jpg" height="160px" width="65%">
-                        <p>Electronics</p>
-                    <!--</div>-->
-                </div>
-                <div class="col-md-2">
-                    <!--<div class="card rounded-square">-->
-                    <div card-body text-center></div>
-                    <img src="img\img\category_img\laptop.jpg" height="160px" width="65%">
-                    <p>Laptop</p>
-                    <!--</div>-->
-                </div>
-                <div class="col-md-2">
-                    <!--<div class="card rounded-square">-->
-                    <div card-body text-center></div>
-                    <img src="img\img\category_img\mobile.jpg" height="160px" width="65%">
-                    <p>Mobile</p>
-                    <!--</div>-->
-                </div>
-                <div class="col-md-2">
-                    <!--<div class="card rounded-square">-->
-                    <div card-body text-center></div>
-                    <img src="img\img\category_img\clothes.jpg" height="160px" width="65%">
-                    <p>Clothe</p>
-                    <!--</div>-->
-                </div>
-                <div class="col-md-2">
-                    <!--<div class="card rounded-square">-->
-                    <div card-body text-center></div>
-                    <img src="img\img\category_img\fashion.jpg" height="160px" width="65%">
-                    <p>Fashion</p>
-                    <!--</div>-->
-                </div>
-                <div class="col-md-2">
-                    <!--<div class="card rounded-square">-->
-                    <div card-body text-center></div>
-                    <img src="img\img\category_img\book.jpg" height="160px" width="65%">
-                    <p>Book</p>
+                        <img th:src="@{'img/img/category_img/'+${c.image}}" height="160px" width="65%">
+                        <p>[[${c.name}]]</p>
                     <!--</div>-->
                 </div>
             </div>
@@ -86,67 +51,11 @@
         <div class="container-fluid bg-light p-3">
             <div class="row">
                 <p class="text-center fs-4">Latest Product</p>
-                <div class="col-md-3">
+                <div class="col-md-3" th:each="p:${product}">
                     <div class="card">
                         <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <img src="img\img\latest_product_img\book.jpg" width="65%" height="140px">
-                            <p class="text-center">Book</p>
+                            <img th:src="@{'img/img/latest_product_img/'+${p.image}}" width="65%" height="140px">
+                            <p class="text-center">[[${p.title}]]</p>
                         </div>
                     </div>
                 </div>
