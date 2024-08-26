@@ -36,11 +36,14 @@
             <div class="row">
                 <p class="text-center fs-4">Category</p>
                 <div class="col-md-2" th:each="c:${category}">
-                    <!--<div class="card rounded-square">-->
-                        <div card-body text-center></div>
-                        <img th:src="@{'img/img/category_img/'+${c.image}}" height="160px" width="65%">
-                        <p>[[${c.name}]]</p>
-                    <!--</div>-->
+                    <div
+                            class="card rounded-circle shadow-sm p-3 mb-5 bg-body-tertiary rounded ">
+                        <div class="card-body text-center">
+                            <img th:src="@{'/img/img/category_img/'+${c.image}}" width="80%" height="170px" ><br>
+                            <a th:href="@{'/product?category='+${c.name}}" class="text-decoration-none">[[${c.name}]]</a>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
 

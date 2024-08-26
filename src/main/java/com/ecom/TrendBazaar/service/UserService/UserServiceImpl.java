@@ -151,4 +151,9 @@ public class UserServiceImpl implements UserService {
         User saved = repository.save(user);
         return saved;
     }
+
+    @Override
+    public Boolean existsEmail(String email) {
+        return repository.existsByEmail(email);
+    }
 }

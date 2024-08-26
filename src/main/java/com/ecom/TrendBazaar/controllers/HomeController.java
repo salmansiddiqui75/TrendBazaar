@@ -125,19 +125,25 @@ public class HomeController {
 
     @PostMapping("/saveUser")
     public String saveUser(@ModelAttribute User user, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
-        String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
-        user.setImage(image);
-        User savedUser = userService.saveUser(user);
-        if (!ObjectUtils.isEmpty(savedUser)) {
-            if (!file.isEmpty()) {
-                File saveFile = new ClassPathResource("static/img/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
-                System.out.println(path);
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        Boolean existsEmail = userService.existsEmail(user.getEmail());
+        if(existsEmail)
+        {
+            session.setAttribute("errorMsg", "Email already exists");
+        }else {
+            String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
+            user.setImage(image);
+            User savedUser = userService.saveUser(user);
+            if (!ObjectUtils.isEmpty(savedUser)) {
+                if (!file.isEmpty()) {
+                    File saveFile = new ClassPathResource("static/img/img").getFile();
+                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+                    System.out.println(path);
+                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                }
+                session.setAttribute("successMsg", "User register successfully");
+            } else {
+                session.setAttribute("errorMsg", "Something went wrong");
             }
-            session.setAttribute("successMsg", "User register successfully");
-        } else {
-            session.setAttribute("errorMsg", "Something went wrong");
         }
         return "redirect:/register";
     }
