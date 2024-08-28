@@ -3,10 +3,12 @@ package com.ecom.TrendBazaar.controllers;
 import com.ecom.TrendBazaar.model.Category;
 import com.ecom.TrendBazaar.model.Product;
 import com.ecom.TrendBazaar.model.User;
+import com.ecom.TrendBazaar.service.AwsService.FileService;
 import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.BucketType;
 import com.ecom.TrendBazaar.util.CommonUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +50,8 @@ public class HomeController {
     private ProductService productService;
     @Autowired
     private CartService cartService;
+    @Autowired
+    private FileService fileService;
 
     @GetMapping("/")
     public String getIndex(Model model)
@@ -130,15 +134,17 @@ public class HomeController {
         {
             session.setAttribute("errorMsg", "Email already exists");
         }else {
-            String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
-            user.setImage(image);
+            //String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
+            String imageUrl = commonUtil.getImageUrl(file, BucketType.PROFILE.getId());
+            user.setImage(imageUrl);
             User savedUser = userService.saveUser(user);
             if (!ObjectUtils.isEmpty(savedUser)) {
                 if (!file.isEmpty()) {
-                    File saveFile = new ClassPathResource("static/img/img").getFile();
-                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
-                    System.out.println(path);
-                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//                    File saveFile = new ClassPathResource("static/img/img").getFile();
+//                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+//                    System.out.println(path);
+//                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                    fileService.uploadFileS3(file,BucketType.PROFILE.getId());
                 }
                 session.setAttribute("successMsg", "User register successfully");
             } else {

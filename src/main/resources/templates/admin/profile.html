@@ -21,7 +21,7 @@
                             <th:block th:text="${@commonServiceImpl.removeSessionMessage()}"></th:block>
                         </th:block>
                         <div class="text-center">
-                            <img alt="" th:src="@{'/img/img/profile_img/'+${loginUser.image}}" class="border p-2"
+                            <img alt="" th:src="${loginUser.image}" class="border p-2"
                                  style="width:140px;height:150px;border-radius:50%">
                         </div>
                         <div class="col-md-6 offset-md-3 mt-3">

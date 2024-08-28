@@ -2,9 +2,13 @@ package com.ecom.TrendBazaar.service.UserService;
 
 import com.ecom.TrendBazaar.model.User;
 import com.ecom.TrendBazaar.repository.UserRepository.UserRepository;
+import com.ecom.TrendBazaar.service.AwsService.FileService;
 import com.ecom.TrendBazaar.util.AppConstant;
+import com.ecom.TrendBazaar.util.BucketType;
+import com.ecom.TrendBazaar.util.CommonUtil;
 import jakarta.mail.Multipart;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public PasswordEncoder passwordEncoder;
+    @Autowired
+    @Lazy
+    private CommonUtil commonUtil;
+
+    @Autowired
+    private FileService fileService;
 
     @Override
     public User saveUser(User user) {
@@ -38,6 +48,8 @@ public class UserServiceImpl implements UserService {
         user.setRole("ROLE_USER");
         String encoded = passwordEncoder.encode(user.getPassword());
         user.setPassword(encoded.trim());
+        String confirmPassword = passwordEncoder.encode( user.getConfirmPassword());
+        user.setConfirmPassword(confirmPassword.trim());
         User saved = repository.save(user);
         return saved;
     }
@@ -119,7 +131,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUserProfile(User user,MultipartFile file) throws IOException {
         User dbUser = repository.findById(user.getId()).get();
-        String imageName = file.isEmpty() ? dbUser.getImage() : file.getOriginalFilename();
+        //String imageName = file.isEmpty() ? dbUser.getImage() : file.getOriginalFilename();
+        String imageUrl = commonUtil.getImageUrl(file, BucketType.PROFILE.getId());
         if(!ObjectUtils.isEmpty(dbUser))
         {
             dbUser.setName(user.getName());
@@ -128,14 +141,16 @@ public class UserServiceImpl implements UserService {
             dbUser.setCity(user.getCity());
             dbUser.setState(user.getState());
             dbUser.setPincode(user.getPincode());
-            dbUser.setImage(imageName);
+            dbUser.setImage(imageUrl);
             dbUser = repository.save(dbUser);
         }
         if (!file.isEmpty()) {
-            File saveFile = new ClassPathResource("static/img/img").getFile();
-            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
-            System.out.println(path);
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//            File saveFile = new ClassPathResource("static/img/img").getFile();
+//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+//            System.out.println(path);
+//            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            fileService.uploadFileS3(file,BucketType.PROFILE.getId());
+
         }
         return dbUser;
     }

@@ -39,7 +39,7 @@
                     <div
                             class="card rounded-circle shadow-sm p-3 mb-5 bg-body-tertiary rounded ">
                         <div class="card-body text-center">
-                            <img th:src="@{'/img/img/category_img/'+${c.image}}" width="80%" height="170px" ><br>
+                            <img th:src="${c.image}" width="80%" height="170px" ><br>
                             <a th:href="@{'/product?category='+${c.name}}" class="text-decoration-none">[[${c.name}]]</a>
                         </div>
                     </div>
@@ -57,8 +57,8 @@
                 <div class="col-md-3" th:each="p:${product}">
                     <div class="card">
                         <div class="card-body text-center">
-                            <img th:src="@{'img/img/latest_product_img/'+${p.image}}" width="65%" height="140px">
-                            <p class="text-center">[[${p.title}]]</p>
+                            <img th:src="${p.image}" width="65%" height="140px"><br>
+                            <a class="text-center" th:href="@{'/product?category='+${p.category}}">[[${p.title}]]</a>
                         </div>
                     </div>
                 </div>

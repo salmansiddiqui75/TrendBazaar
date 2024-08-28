@@ -4,16 +4,19 @@ import com.ecom.TrendBazaar.model.Category;
 import com.ecom.TrendBazaar.model.Product;
 import com.ecom.TrendBazaar.model.ProductOrder;
 import com.ecom.TrendBazaar.model.User;
+import com.ecom.TrendBazaar.service.AwsService.FileService;
 import com.ecom.TrendBazaar.service.CartService.CartService;
 import com.ecom.TrendBazaar.service.CategoryService;
 import com.ecom.TrendBazaar.service.OrderService.OrderService;
 import com.ecom.TrendBazaar.service.ProductService.ProductService;
 import com.ecom.TrendBazaar.service.UserService.UserService;
+import com.ecom.TrendBazaar.util.BucketType;
 import com.ecom.TrendBazaar.util.CommonUtil;
 import com.ecom.TrendBazaar.util.OrderStatus;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,10 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.util.List;
 
@@ -48,10 +47,11 @@ public class AdminController {
     private OrderService orderService;
     @Autowired
     private CommonUtil commonUtil;
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @GetMapping("/")
     public String getIndex() {
         return "admin/index";
@@ -79,7 +79,7 @@ public class AdminController {
 
     @GetMapping("/getAddCategory")
     public String getAddCategory(Model model,@RequestParam(name="pageNo",defaultValue = "0")int pageNo,
-                                 @RequestParam(name = "pageSize",defaultValue = "2")int pageSize)
+                                 @RequestParam(name = "pageSize",defaultValue = "6")int pageSize)
     {
         Page<Category> page = categoryService.getAllCategoryPagination(pageNo, pageSize);
 
@@ -97,26 +97,47 @@ public class AdminController {
     }
 
     @PostMapping("/saveCategory")
-    public String saveCategory(@ModelAttribute Category category, @RequestParam("file") MultipartFile file, HttpSession httpSession) throws IOException {
-        String image = file != null ? file.getOriginalFilename() : "default.jpg";
-        category.setImage(image);
-        if (categoryService.exitCategory(category.getName())) {
-            httpSession.setAttribute("errorMsg", "Category already exits");
+    public String saveCategory(@RequestParam("name")String name,@RequestParam("isActive")Boolean isActive, @RequestParam("file") MultipartFile file,
+                               HttpSession session) throws IOException
+    {
+        String imageUrl = commonUtil.getImageUrl(file, BucketType.CATEGORY.getId());
+        // Create a new Category object
+        Category category = new Category();
+        System.out.println(category);
+
+        //https://trendbazzar-category.s3.eu-north-1.amazonaws.com/fashion.png
+        // Manually set form data into the Category object
+        category.setName(name);
+        category.setActive(isActive);
+
+        category.setImage(imageUrl);
+
+        Boolean existCategory = categoryService.exitCategory(category.getName());
+
+        if (existCategory) {
+            session.setAttribute("errorMsg", "Category Name already exists");
         } else {
+
             Category saveCategory = categoryService.saveCategory(category);
+
             if (ObjectUtils.isEmpty(saveCategory)) {
-                httpSession.setAttribute("errorMsg", "Not saved ! Facing some issue");
+                session.setAttribute("errorMsg", "Not saved ! internal server error");
             } else {
-                File saveFile = new ClassPathResource("static/img/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator + file.getOriginalFilename());
-                System.out.println(path);
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                httpSession.setAttribute("successMsg", "Category save successfully ");
+
+//                File saveFile = new ClassPathResource("static/img/img").getFile();
+//
+//                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator
+//                        + file.getOriginalFilename());
+//
+//                // System.out.println(path);
+//                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                fileService.uploadFileS3(file,1);
+
+                session.setAttribute("successMsg", "Saved successfully");
             }
         }
         return "redirect:/admin/getAddCategory";
     }
-
     @GetMapping("/deleteCategory/{id}")
     public String deleteCategory(@PathVariable int id, HttpSession httpSession) {
         boolean categoty = categoryService.deleteCategoty(id);
@@ -135,44 +156,67 @@ public class AdminController {
         return "admin/edit_category";
     }
 
-    @PostMapping("/updateCategory")
-    public String updateCategory(@ModelAttribute Category category, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
-        Category oldCategory = categoryService.getByIdCategory(category.getId());
-        String imageName = file.isEmpty() ? oldCategory.getImage() : file.getOriginalFilename();
+@PostMapping("/updateCategory")
+public String updateCategory(@RequestParam("id") int id,
+                             @RequestParam("name") String name,
+                             @RequestParam("isActive") boolean isActive,
+                             @RequestParam("file") MultipartFile file,
+                             HttpSession session) throws IOException {
 
-        if (!ObjectUtils.isEmpty(oldCategory)) {
-            oldCategory.setName(category.getName());
-            oldCategory.setImage(imageName);
-            oldCategory.setIsActive(category.getIsActive());
-        }
-        Category updateCategory = categoryService.saveCategory(oldCategory);
-        if (!ObjectUtils.isEmpty(updateCategory)) {
-            if (!file.isEmpty()) {
-                File saveFile = new ClassPathResource("static/img/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator + file.getOriginalFilename());
-                System.out.println(path);
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                session.setAttribute("successMsg", "Category save successfully ");
-            }
-            session.setAttribute("successMsg", "Category update successfully");
-        } else {
-            session.setAttribute("errorMsg", "Something went wrong");
-        }
-        return "redirect:/admin/loadEditCategory/" + category.getId();
+    // Retrieve the existing category from the database
+    Category oldCategory = categoryService.getByIdCategory(id);
+
+    if (oldCategory == null) {
+        session.setAttribute("errorMsg", "Category not found.");
+        return "redirect:/admin/loadEditCategory/" + id;
     }
 
+    // Determine the image name url (new file or retain the old one)
+    String imageUrl = commonUtil.getImageUrl(file, BucketType.CATEGORY.getId());
+
+    // Manually set the fields of the old category
+    oldCategory.setName(name);
+    oldCategory.setImage(imageUrl);
+    oldCategory.setIsActive(isActive);
+
+    // Save the updated category to the database
+    Category updatedCategory = categoryService.saveCategory(oldCategory);
+
+    if (updatedCategory != null) {
+        if (!file.isEmpty()) {
+            // Handle file saving
+//            File saveFile = new ClassPathResource("static/img/img").getFile();
+//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator + file.getOriginalFilename());
+//            System.out.println(path);
+//            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            fileService.uploadFileS3(file,1);
+            session.setAttribute("successMsg", "Category saved successfully.");
+            return "redirect:/admin/loadEditCategory/" + id;  // Return here to avoid overwriting the success message
+        }
+        session.setAttribute("successMsg", "Category updated successfully.");
+    } else {
+        session.setAttribute("errorMsg", "Something went wrong.");
+    }
+
+    return "redirect:/admin/loadEditCategory/" + id;
+}
+
+
     @PostMapping("/saveProduct")
-    public String saveProduct(@ModelAttribute Product product, HttpSession httpSession, @RequestParam("file") MultipartFile file) throws IOException {
-        String imageName = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
-        product.setImage(imageName);
+    public String saveProduct(@ModelAttribute Product product, HttpSession httpSession,Model model, @RequestParam("file") MultipartFile file) throws IOException {
+        model.addAttribute("srch", false);
+        //String imageName = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
+        String imageUrl = commonUtil.getImageUrl(file, BucketType.PRODUCT.getId());
+        product.setImage(imageUrl);
         product.setDiscount(0);
         product.setDiscountPrice(product.getPrice());
         Product saveProduct = productService.saveProduct(product);
         if (!ObjectUtils.isEmpty(saveProduct)) {
-            File saveFile = new ClassPathResource("static/img/img").getFile();
-            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
-            System.out.println(path);
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//            File saveFile = new ClassPathResource("static/img/img").getFile();
+//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
+//            System.out.println(path);
+//            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            fileService.uploadFileS3(file,BucketType.PRODUCT.getId());
             httpSession.setAttribute("successMsg", "Product save successfully");
         } else {
             httpSession.setAttribute("errorMsg", "Something went wrong");
@@ -235,7 +279,8 @@ public class AdminController {
         }
 
         // Determine the image name
-        String imageName = file.isEmpty() ? oldProduct.getImage() : file.getOriginalFilename();
+        //String imageName = file.isEmpty() ? oldProduct.getImage() : file.getOriginalFilename();
+        String imageUrl = commonUtil.getImageUrl(file, BucketType.PRODUCT.getId());
         if (product.getDiscount() < 0 || product.getDiscount() > 100) {
             session.setAttribute("errorMsg", "Invalid discount !! It should be between 0 to 100 %");
         } else {
@@ -246,7 +291,7 @@ public class AdminController {
                 oldProduct.setDescription(product.getDescription());
                 oldProduct.setPrice(product.getPrice());
                 oldProduct.setStock(product.getStock());
-                oldProduct.setImage(imageName);
+                oldProduct.setImage(imageUrl);
                 oldProduct.setDiscount(product.getDiscount());
                 oldProduct.setIsActive(product.getIsActive());
 
@@ -262,10 +307,11 @@ public class AdminController {
             // If the product is saved successfully
             if (!ObjectUtils.isEmpty(savedProduct)) {
                 if (!file.isEmpty()) {
-                    File saveFile = new ClassPathResource("static/img/img").getFile();
-                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
-                    System.out.println(path);
-                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//                    File saveFile = new ClassPathResource("static/img/img").getFile();
+//                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator + file.getOriginalFilename());
+//                    System.out.println(path);
+//                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                    fileService.uploadFileS3(file,BucketType.PRODUCT.getId());
                 }
 
                 session.setAttribute("successMsg", "Product update successfully");
@@ -400,15 +446,17 @@ public class AdminController {
 
     @PostMapping("/save-admin")
     public String addAdmin(@ModelAttribute User user, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
-        String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
-        user.setImage(image);
+        //String image = file.isEmpty() ? "default.jpg" : file.getOriginalFilename();
+        String imageUrl = commonUtil.getImageUrl(file, BucketType.PROFILE.getId());
+        user.setImage(imageUrl);
         User addAdmin = userService.addAdmin(user);
         if (!ObjectUtils.isEmpty(addAdmin)) {
             if (!file.isEmpty()) {
-                File saveFile = new ClassPathResource("static/img/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
-                System.out.println(path);
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//                File saveFile = new ClassPathResource("static/img/img").getFile();
+//                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + File.separator + file.getOriginalFilename());
+//                System.out.println(path);
+//                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                fileService.uploadFileS3(file,BucketType.PROFILE.getId());
             }
             session.setAttribute("successMsg", "New admin added successfully");
         } else {

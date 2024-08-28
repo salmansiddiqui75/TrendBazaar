@@ -94,7 +94,7 @@
                                     <input type="file" name="file" class="form-control">
                                 </div>
                                 <div class="mt-1">
-                                    <img th:src="@{'/img/img/product_img/'+${product.image}}" width="100px" height="100px">
+                                    <img th:src="${product.image}" width="100px" height="100px">
                                 </div>
                             </div>
                             <button class="btn btn-primary col-md-12">Update</button>

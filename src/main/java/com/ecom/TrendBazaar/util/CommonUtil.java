@@ -7,9 +7,11 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
@@ -22,6 +24,12 @@ public class CommonUtil {
     @Autowired
     private UserService userService;
 
+    @Value("${aws.s3.bucket.category}")
+    private String categoryBucket;
+    @Value("${aws.s3.bucket.product}")
+    private String productBucket;
+    @Value("${aws.s3.bucket.profile}")
+    private String profileBucket;
     public Boolean sendMail(String url, String reciepentMail) throws MessagingException, UnsupportedEncodingException {
         // Create a MimeMessage
         MimeMessage message = javaMailSender.createMimeMessage();
@@ -97,11 +105,31 @@ public class CommonUtil {
 
         return true;
     }
-
     public User getLoggedInUserDetails(Principal principal)
     {
         String name = principal.getName();
         User user = userService.findByEmail(name);
         return user;
+    }
+
+    public String getImageUrl(MultipartFile file,int bucketType)
+    {
+        String bucketName=null;
+        if(bucketType==1)
+        {
+            bucketName=categoryBucket;
+        }
+        else if(bucketType==2)
+        {
+            bucketName=productBucket;
+        }else{
+            bucketName=profileBucket;
+        }
+        String imageName = file != null ? file.getOriginalFilename() : "default.jpg";
+
+        //https://trendbazzar-category.s3.eu-north-1.amazonaws.com/fashion.png
+        //https://trendbazaar-category.s3.eu-north-1.amazonaws.com/iphone.png
+        String url="https://"+bucketName+".s3.eu-north-1.amazonaws.com/"+imageName;
+        return url;
     }
 }
